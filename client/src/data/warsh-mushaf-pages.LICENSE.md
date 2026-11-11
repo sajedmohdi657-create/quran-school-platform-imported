@@ -20,7 +20,7 @@ The temporary in-platform reader uses the following publication:
 - IslamContent item: https://islamcontent.com/ar/content/2885
 - IslamHouse item: https://islamhouse.com/ar/books/2790112/
 - File format and published size: PDF, 338 MB
-- API item endpoint: https://api3.islamhouse.com/v3/paV29H2gm56kvLPy/main/check-attachment/2790112/json
+- API item endpoint (returns item metadata and attachments): https://api3.islamhouse.com/v3/paV29H2gm56kvLPy/main/get-item/2790112/ar/json
 
 IslamHouse-API's published content policy explicitly permits downloading, republishing, storing for offline use, and integrating IslamHouse materials into apps and websites, including commercial and non-commercial projects, without prior written permission, provided the original material and metadata remain unchanged and the source is clearly credited:
 https://github.com/IslamHouse-API/multilingual-quran-hadith-islamic-content-database-api-hub
