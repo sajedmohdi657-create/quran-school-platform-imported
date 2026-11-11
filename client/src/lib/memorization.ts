@@ -655,6 +655,16 @@ async function listMemorizationClassTeachers(
   }));
 }
 
+export async function fetchMemorizationClassTeachers(
+  schoolId: string,
+  branchId: string,
+  classId: string,
+  client: SupabaseClient = getSupabaseClient()
+): Promise<MemorizationTeacher[]> {
+  await assertViewOrManage(client, schoolId, branchId, classId);
+  return listMemorizationClassTeachers(client, schoolId, branchId, classId);
+}
+
 export async function fetchMemorizationWorkspace(
   schoolId: string,
   branchId: string,

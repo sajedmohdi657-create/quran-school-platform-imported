@@ -67,6 +67,7 @@ import {
   type MemorizationScope,
   type MemorizationWorkspace,
 } from "@/lib/memorization";
+import { getSupabaseClient } from "@/lib/supabase";
 import {
   deleteTeacherMemorizationDraft,
   getTeacherMemorizationRecords,
@@ -288,6 +289,22 @@ export default function Memorization() {
   useEffect(() => {
     void loadScope();
   }, [loadScope]);
+
+  useEffect(() => {
+    if (!school?.id || !branchId || !classId) return;
+    void (async () => {
+      try {
+        await getSupabaseClient().rpc("refresh_learning_follow_up_alerts", {
+          target_school_id: school.id,
+          target_branch_id: branchId,
+          target_class_id: classId,
+          target_student_id: null,
+        });
+      } catch {
+        // Network failures must never interrupt the teacher's memorization workflow.
+      }
+    })();
+  }, [school?.id, branchId, classId, onlineRevision]);
 
   const availableClasses = useMemo(
     () => scope?.classes.filter(item => item.branchId === branchId) ?? [],

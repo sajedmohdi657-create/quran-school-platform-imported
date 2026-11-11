@@ -188,19 +188,21 @@ export default function Notifications() {
           {rows.map(row => {
             const unread = box === "inbox" && !row.readAt;
             const clickable = box === "inbox" && Boolean(row.targetPath);
+            const danger = row.eventType.endsWith("_overdue") || row.eventType.includes("absence_follow_up");
+            const warning = row.eventType.endsWith("_weakness");
             return (
               <button
                 type="button"
                 key={row.notificationId}
                 onClick={() => void openNotification(row)}
-                className={`w-full rounded-xl border bg-white p-4 ${en ? "text-left" : "text-right"} transition ${clickable ? "hover:border-[#8FB7A5] hover:shadow-sm" : "cursor-default"} ${unread ? "border-[#9CC8B4] bg-[#F5FBF7]" : ""}`}
+                className={`w-full rounded-xl border p-4 ${en ? "text-left" : "text-right"} transition ${clickable ? "hover:shadow-sm" : "cursor-default"} ${danger ? "border-red-200 bg-red-50" : warning ? "border-amber-200 bg-amber-50" : unread ? "border-[#9CC8B4] bg-[#F5FBF7]" : "border-[#E2EAE4] bg-white"} ${clickable ? "hover:border-[#8FB7A5]" : ""}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       {unread && <span className="size-2 rounded-full bg-[#17663B]" aria-label={en ? "Unread" : "غير مقروء"} />}
                       <span className="font-bold text-[#173B2D]">{row.title}</span>
-                      <Badge variant="outline">{en ? categories.find(item => item.value === row.category)?.en : categories.find(item => item.value === row.category)?.ar}</Badge>
+                      <Badge variant="outline" className={danger ? "border-red-300 text-red-800" : warning ? "border-amber-300 text-amber-800" : ""}>{en ? categories.find(item => item.value === row.category)?.en : categories.find(item => item.value === row.category)?.ar}</Badge>
                       {unread && <Badge className="bg-[#17663B]">{en ? "New" : "جديد"}</Badge>}
                     </div>
                     <p className="mt-2 text-sm leading-6 text-[#40564B]">{row.body}</p>

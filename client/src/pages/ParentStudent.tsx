@@ -19,10 +19,12 @@ import { QURAN_SURAHS } from "@/lib/memorization";
 import {
   fetchParentStudentAcademic,
   fetchParentStudentFinance,
+  fetchParentStudentLearningFollowUp,
   listMyGuardianStudents,
   type ParentStudent,
   type ParentStudentAcademicData,
   type ParentStudentFinanceData,
+  type ParentLearningFollowUp,
 } from "@/lib/parent-portal";
 
 function formatDate(value: string | null): string {
@@ -148,6 +150,7 @@ export default function ParentStudent() {
   const [student, setStudent] = useState<ParentStudent | null>(null);
   const [data, setData] = useState<ParentStudentAcademicData | null>(null);
   const [finance, setFinance] = useState<ParentStudentFinanceData | null>(null);
+  const [learning, setLearning] = useState<ParentLearningFollowUp | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "missing" | "error">("loading");
 
   const load = useCallback(async () => {
@@ -164,11 +167,12 @@ export default function ParentStudent() {
         setStudent(null);
         setData(null);
         setFinance(null);
+        setLearning(null);
         setState("missing");
         return;
       }
 
-      const [academic, financeData] = await Promise.all([
+      const [academic, financeData, learningData] = await Promise.all([
         fetchParentStudentAcademic(
           currentStudent.schoolId,
           currentStudent.studentId
@@ -177,10 +181,15 @@ export default function ParentStudent() {
           currentStudent.schoolId,
           currentStudent.studentId
         ),
+        fetchParentStudentLearningFollowUp(
+          currentStudent.schoolId,
+          currentStudent.studentId
+        ),
       ]);
       setStudent(currentStudent);
       setData(academic);
       setFinance(financeData);
+      setLearning(learningData);
       setState("ready");
     } catch {
       setState("error");
@@ -221,7 +230,7 @@ export default function ParentStudent() {
     );
   }
 
-  if (state === "error" || !student || !data || !finance) {
+  if (state === "error" || !student || !data || !finance || !learning) {
     return (
       <section className="rounded-2xl border border-red-200 bg-white p-7 text-center shadow-sm">
         <h1 className="text-xl font-bold text-[#173B2D]">تعذر تحميل ملف الطالب</h1>
@@ -346,6 +355,44 @@ export default function ParentStudent() {
             ))
           )}
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <BookOpenCheck size={20} className="text-[#17663B]" />
+          <h2 className="text-lg font-bold text-[#173B2D]">التكليفات القادمة ومتابعة المواضع</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <Stat label="تكليفات الحفظ والمراجعة" value={learning.targets.length} />
+          <Stat label="تكليفات متأخرة" value={learning.targets.filter(item => item.overdue && !item.completed).length} />
+          <Stat label="غياب آخر 30 يومًا" value={learning.attendance.absenceCount} />
+        </div>
+        {learning.targets.length === 0 ? (
+          <div className="rounded-2xl border border-[#DCE7DF] bg-white p-5 text-center text-sm text-[#718279]">
+            لا توجد تكليفات محددة حاليًا من المعلم.
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {learning.targets.map(item => (
+              <article key={item.id} className="rounded-2xl border border-[#DCE7DF] bg-white p-4 shadow-sm">
+                <p className="font-bold text-[#173B2D]">
+                  {item.targetKind === "new_memorization" ? "حفظ الجديد" : "مراجعة"} · سورة {surahName(item.surahNumber)}
+                </p>
+                <p className="mt-1 text-sm text-[#607368]">الآيات {item.ayahStart}–{item.ayahEnd}</p>
+                <p className="mt-2 text-xs text-[#718279]">موعد الإنجاز: {formatDate(item.dueOn)}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                  {item.completed ? (
+                    <span className="rounded-full bg-[#E8F3EC] px-3 py-1 text-[#17663B]">مكتمل</span>
+                  ) : item.overdue ? (
+                    <span className="rounded-full bg-[#FDECEC] px-3 py-1 text-[#B83A3A]">متأخر ويحتاج متابعة</span>
+                  ) : (
+                    <span className="rounded-full bg-[#EAF3FA] px-3 py-1 text-[#256D95]">قيد الإنجاز</span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="space-y-4">

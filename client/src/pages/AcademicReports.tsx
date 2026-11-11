@@ -10,6 +10,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import MemorizationAnalyticsPanel from "@/components/MemorizationAnalyticsPanel";
+import SmartLearningFollowUpPanel from "@/components/SmartLearningFollowUpPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   AcademicReportsPermissionError,
@@ -37,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type LoadState = "loading" | "ready" | "forbidden" | "error";
-type ReportTab = "overview" | "attendance" | "memorization" | "analytics" | "classes";
+type ReportTab = "overview" | "attendance" | "memorization" | "analytics" | "smart" | "classes";
 
 const arabicDateFormatter = new Intl.DateTimeFormat("ar-DZ-u-nu-latn", {
   dateStyle: "medium",
@@ -419,7 +420,10 @@ export default function AcademicReports() {
                 <TabsTrigger value="memorization" className="min-h-10 shrink-0">الحفظ والمراجعة</TabsTrigger>
               )}
               {access.memorization.state === "ready" && (
-                <TabsTrigger value="analytics" className="min-h-10 shrink-0">تحليلات المتابعة</TabsTrigger>
+                <>
+                  <TabsTrigger value="analytics" className="min-h-10 shrink-0">تحليلات المتابعة</TabsTrigger>
+                  <TabsTrigger value="smart" className="min-h-10 shrink-0">المتابعة الذكية</TabsTrigger>
+                </>
               )}
               <TabsTrigger value="classes" className="min-h-10 shrink-0">الحلقات</TabsTrigger>
             </TabsList>
@@ -479,6 +483,21 @@ export default function AcademicReports() {
                 />
               ) : (
                 <ModuleError label="تحليلات متابعة الحفظ" />
+              )}
+            </TabsContent>
+
+            <TabsContent value="smart">
+              {access.memorization.state === "ready" && school?.id ? (
+                <SmartLearningFollowUpPanel
+                  schoolId={school.id}
+                  canManage={access.memorization.scope.canManage}
+                  branchId={filters.branchId}
+                  classId={filters.classId}
+                  studentId={filters.studentId}
+                  students={data.students.map(item => ({ id: item.id, name: item.fullName, branchId: item.branchId, classId: item.classId }))}
+                />
+              ) : (
+                <ModuleError label="المتابعة الذكية" />
               )}
             </TabsContent>
 

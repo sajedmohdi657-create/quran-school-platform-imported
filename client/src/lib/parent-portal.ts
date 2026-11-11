@@ -60,6 +60,23 @@ export type ParentStudentAcademicData = {
   memorizationRecords: ParentMemorizationRecord[];
 };
 
+export type ParentLearningTarget = {
+  id: string;
+  targetKind: "new_memorization" | "revision";
+  surahNumber: number;
+  ayahStart: number;
+  ayahEnd: number;
+  assignedOn: string;
+  dueOn: string;
+  completed: boolean;
+  overdue: boolean;
+};
+
+export type ParentLearningFollowUp = {
+  targets: ParentLearningTarget[];
+  attendance: { absenceCount: number; lateCount: number };
+};
+
 export type ParentFinanceSummary = {
   totalCharged: number;
   totalPaid: number;
@@ -214,6 +231,41 @@ export async function fetchParentStudentAcademic(
       focusWords: row.focus_words ?? null,
       nextAssignment: row.next_assignment ?? null,
     })),
+  };
+}
+
+export async function fetchParentStudentLearningFollowUp(
+  schoolId: string,
+  studentId: string,
+  client: SupabaseClient = getSupabaseClient()
+): Promise<ParentLearningFollowUp> {
+  const { data, error } = await client.rpc("get_my_guardian_learning_follow_up", {
+    target_school_id: schoolId,
+    target_student_id: studentId,
+    target_limit: 50,
+  });
+  if (error) throw error;
+  const result = (data ?? {}) as Record<string, unknown>;
+  const attendance = (result.attendance ?? {}) as Record<string, unknown>;
+  return {
+    targets: (Array.isArray(result.targets) ? result.targets : []).map(value => {
+      const row = value as Record<string, unknown>;
+      return {
+        id: String(row.id ?? ""),
+        targetKind: row.target_kind as ParentLearningTarget["targetKind"],
+        surahNumber: asNumber(row.surah_number),
+        ayahStart: asNumber(row.ayah_start),
+        ayahEnd: asNumber(row.ayah_end),
+        assignedOn: String(row.assigned_on ?? ""),
+        dueOn: String(row.due_on ?? ""),
+        completed: row.completed === true,
+        overdue: row.overdue === true,
+      };
+    }),
+    attendance: {
+      absenceCount: asNumber(attendance.absence_count),
+      lateCount: asNumber(attendance.late_count),
+    },
   };
 }
 

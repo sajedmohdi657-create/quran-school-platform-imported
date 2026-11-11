@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, test, vi } from "vitest";
 import {
   fetchParentStudentAcademic,
+  fetchParentStudentLearningFollowUp,
   listMyGuardianStudents,
 } from "@/lib/parent-portal";
 
@@ -140,6 +141,51 @@ describe("Guardian parent academic RPC client", () => {
       "list_my_guardian_student_memorization",
       expect.objectContaining({ target_limit: 20 })
     );
+  });
+
+  test("fetches only assigned Quran targets and attendance follow-up for the linked child", async () => {
+    const { client, rpc } = buildClient({
+      get_my_guardian_learning_follow_up: {
+        data: {
+          targets: [
+            {
+              id: "target-1",
+              target_kind: "revision",
+              surah_number: 57,
+              ayah_start: 1,
+              ayah_end: 10,
+              assigned_on: "2026-11-01",
+              due_on: "2026-11-05",
+              completed: false,
+              overdue: true,
+            },
+          ],
+          attendance: { absence_count: 2, late_count: 1 },
+        },
+        error: null,
+      },
+    });
+
+    const result = await fetchParentStudentLearningFollowUp("school-a", "student-a", client);
+    expect(result).toEqual({
+      targets: [{
+        id: "target-1",
+        targetKind: "revision",
+        surahNumber: 57,
+        ayahStart: 1,
+        ayahEnd: 10,
+        assignedOn: "2026-11-01",
+        dueOn: "2026-11-05",
+        completed: false,
+        overdue: true,
+      }],
+      attendance: { absenceCount: 2, lateCount: 1 },
+    });
+    expect(rpc).toHaveBeenCalledWith("get_my_guardian_learning_follow_up", {
+      target_school_id: "school-a",
+      target_student_id: "student-a",
+      target_limit: 50,
+    });
   });
 
   test("does not hide an authorization failure behind empty academic data", async () => {

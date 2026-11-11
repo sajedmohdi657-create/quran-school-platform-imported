@@ -1,0 +1,54 @@
+name: Smart Learning Follow-up Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "client/src/components/SmartLearningFollowUpPanel.tsx"
+      - "client/src/pages/AcademicReports.tsx"
+      - "supabase/085_smart_learning_follow_up_targets.sql"
+      - "supabase/086_smart_learning_follow_up_notification_writer.sql"
+      - "tests/smart-learning-follow-up-*"
+      - "tests/run-smart-learning-follow-up-migration-test.sh"
+      - "package.json"
+      - "pnpm-lock.yaml"
+  push:
+    branches: [feat/smart-learning-follow-up]
+    paths:
+      - "client/src/components/SmartLearningFollowUpPanel.tsx"
+      - "client/src/pages/AcademicReports.tsx"
+      - "supabase/085_smart_learning_follow_up_targets.sql"
+      - "supabase/086_smart_learning_follow_up_notification_writer.sql"
+      - "tests/smart-learning-follow-up-*"
+      - "tests/run-smart-learning-follow-up-migration-test.sh"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smart-learning-follow-up-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.4.1 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build and run application tests
+        run: pnpm build
+      - name: Validate smart learning follow-up migration on PostgreSQL 17
+        run: bash tests/run-smart-learning-follow-up-migration-test.sh
