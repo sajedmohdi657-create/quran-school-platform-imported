@@ -50,7 +50,7 @@ Required browser-side Supabase configuration is documented in `.env.example`. Ne
 
 ## Known documentation gap
 
-The existing README still describes the database as if the project stopped at migration 015 and lists a limited earlier application scope. That description is stale relative to the current migration inventory and recent project history. Update the README only after verifying the current routes, deployment configuration, and production database state.
+The existing README documents only migrations 001–015, says 001–014 are applied and 015 is pending, and lists a narrower application scope. The repository now contains migration files through 084, so that database section is stale. Update the README only after verifying the current routes, deployment configuration, and production database state.
 
 ## Safe next steps
 
