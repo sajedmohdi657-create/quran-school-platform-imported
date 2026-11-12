@@ -41,7 +41,9 @@ Required browser-side Supabase configuration is documented in `.env.example`. Ne
 
 ## GitHub Actions and repository settings
 
-- At the time of this review, the imported repository returned zero workflow runs. This means no post-import Actions run had been recorded; it does not mean the workflows passed.
+- At the initial import review, the repository had zero workflow runs; that was an absence of execution, not a passing result.
+- A new `.github/workflows/application-ci.yml` workflow has since been added and merged to `main`. It runs the application test suite, runtime tests, TypeScript check, and production build on pull requests to `main`.
+- Its first push-triggered run completed successfully on commit `14b2d71493c836728e54d7c9bd068995a3edff15` (run `43312528320`). This validates the application CI path on that commit; it does not validate database migrations or production deployment.
 - Workflow definitions are present under `.github/workflows`, including launch-readiness, subscription migration, guardian notification, and absence-notification validation.
 - Some workflows are manual-dispatch or pull-request triggered. A workflow file existing in the repository is not evidence that it has executed.
 - The `main` branch was reported as unprotected by the GitHub API during this review. Consider enabling branch protection and required checks after the first reliable CI run is established.
