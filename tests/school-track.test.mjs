@@ -3,8 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [migration, handler, services, app, config, page, profile] = await Promise.all([
+const [migration, auditMigration, handler, services, app, config, page, profile] = await Promise.all([
   read("supabase/067_school_track_results.sql"),
+  read("supabase/087_revoke_audit_trigger_rpc.sql"),
   read("supabase/functions/analyze-school-track/handler.ts"),
   read("supabase/functions/analyze-school-track/services.ts"),
   read("client/src/App.tsx"),
@@ -32,6 +33,12 @@ test("protects result reads and audited corrections through RLS without browser 
   assert.match(migration, /from public, anon, authenticated/);
   assert.doesNotMatch(migration, /grant delete on public\.school_track_results/i);
   assert.doesNotMatch(page, /\.delete\(/);
+});
+
+test("keeps the audit function trigger-only and blocks direct RPC execution", () => {
+  assert.match(migration, /create trigger school_track_results_audit/);
+  assert.match(auditMigration, /revoke all on function public\.audit_school_track_result\(\)/);
+  assert.match(auditMigration, /from public, anon, authenticated/);
 });
 
 test("limits AI analysis to authenticated, authorized pseudonymous data", () => {
