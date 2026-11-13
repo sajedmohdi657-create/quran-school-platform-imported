@@ -41,8 +41,8 @@ function dependencies(
     listQuranProgress: async () => [],
     analyze: async () => ({
       summary: "أداء جيد في المتاح من البيانات.",
-      strengths: ["تحسن في الرياضيات"],
-      focusAreas: ["مراجعة المسائل"],
+      strengths: ["تحسن المعدل الفصلي"],
+      focusAreas: ["العمل على رفع المعدل"],
       actions: ["متابعة أسبوعية قصيرة"],
       quranDataIncluded: false,
     }),
