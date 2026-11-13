@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { GraduationCap, Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { EmptyState, PageHeader, SectionHeader, StatCard } from "@/components/ui/app-primitives";
+import { EmptyState, PageHeader, SectionHeader } from "@/components/ui/app-primitives";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
