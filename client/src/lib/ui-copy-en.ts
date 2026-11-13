@@ -2199,4 +2199,12 @@ export const EXACT_UI_ENGLISH: Record<string, string> = {
   "من 20": "Out of 20",
   "المعدل النهائي (من 20)": "Final average (out of 20)",
   "اكتب السنة الدراسية بصيغة 2026/2027.": "Enter the academic year in the format 2026/2027.",
+
+  "معدل فصلي": "Term average",
+  "معدلات الفصول": "Term averages",
+  "لا توجد معدلات": "No averages",
+  "معدلات الفصول الدراسية الثلاثة فقط، دون عرض المواد أو علامات الاختبارات.": "Only the three term averages are shown; subjects and individual assessment grades are not displayed.",
+  "تعذر تحميل معدلات الفصول": "Could not load term averages.",
+  "لا توجد معدلات فصول مسجلة": "No term averages have been recorded.",
+  "تظهر هنا معدلات الفصول الأول والثاني والثالث عند تسجيلها.": "The first, second, and third term averages will appear here when recorded.",
 };
