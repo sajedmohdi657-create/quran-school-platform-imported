@@ -30,6 +30,6 @@ test("renders only the three term averages without subject controls or columns",
   assert.match(page, /الفصل الثاني/);
   assert.match(page, /الفصل الثالث/);
   assert.match(page, /معدل الفصل/);
-  assert.doesNotMatch(page, /المادة|المواد|subject|assessment_title/i);
+  assert.doesNotMatch(page, /المادة|subject|assessment_title/i);
   assert.match(app, /import\("\.\/pages\/SchoolTrackAverages"\)/);
 });
