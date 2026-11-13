@@ -189,7 +189,7 @@ begin
     if resolved_student_id is null
        and student_first_name <> ''
        and student_last_name <> ''
-       and student_birth_date ~ '^\\d{4}-\\d{2}-\\d{2}$' then
+       and student_birth_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then
       begin
         select s.id into resolved_student_id
         from public.students s
@@ -228,7 +228,7 @@ begin
     if char_length(guardian_name) < 2 or char_length(guardian_name) > 150 then
       issues := array_append(issues, 'guardian_name_invalid');
     end if;
-    if guardian_email !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$'
+    if guardian_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
        or char_length(guardian_email) > 254 then
       issues := array_append(issues, 'guardian_email_invalid');
     end if;
@@ -238,7 +238,7 @@ begin
 
     duplicate_found := false;
     if resolved_student_id is not null
-       and guardian_email ~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$' then
+       and guardian_email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then
       duplicate_found :=
         exists (
           select 1
