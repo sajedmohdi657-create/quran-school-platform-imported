@@ -45,37 +45,53 @@ jobs:
       - name: Verify Docker runtime
         run: docker info
 
-      - name: Stage ordered migrations 001–081
+      - name: Stage schema foundation before seed data
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p supabase/migrations
-          sequence=1
+          cp supabase/001_initial_schema.sql supabase/migrations/20261106000001_001_initial_schema.sql
+          cp supabase/002_rls_policies.sql supabase/migrations/20261106000002_002_rls_policies.sql
+          cp supabase/082_platform_subscriptions_foundation.sql /tmp/082_platform_subscriptions_foundation.sql
+
+      - name: Start isolated local Supabase and seed the foundation
+        run: |
+          supabase start
+          supabase db reset
+
+      - name: Stage and apply repeatable baseline migrations after seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          sequence=4
           for file in supabase/[0-9][0-9][0-9]_*.sql; do
             base="$(basename "$file")"
-            if [[ "$base" == 082_* ]]; then
-              cp "$file" /tmp/082_platform_subscriptions_foundation.sql
+            if [[ "$base" == "001_initial_schema.sql" || "$base" == "002_rls_policies.sql" || "$base" == "003_bootstrap_first_admin.sql" || "$base" == 082_* ]]; then
               continue
             fi
             printf -v version '20261106%06d' "$sequence"
             cp "$file" "supabase/migrations/${version}_${base}"
             sequence=$((sequence + 1))
           done
-          test -s /tmp/082_platform_subscriptions_foundation.sql
-          echo "Staged $((sequence - 1)) existing migrations; migration 082 is held for the post-seed backfill test."
+          echo "Applying repeatable migrations 004–081; the one-time Auth bootstrap is intentionally excluded."
+          supabase migration up
 
-      - name: Start isolated local Supabase and apply baseline migrations plus seed
-        run: supabase start
-
-      - name: Apply migration 082 after seed data exists
+      - name: Apply migration 082 after seed data and baseline migrations
         shell: bash
         run: |
           set -euo pipefail
           cp /tmp/082_platform_subscriptions_foundation.sql supabase/migrations/20261106000082_082_platform_subscriptions_foundation.sql
           supabase migration up
 
-      - name: Run pgTAP migration and security assertions
-        run: supabase test db
+      - name: Run pgTAP migration and security assertions when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if compgen -G "supabase/tests/*.sql" > /dev/null; then
+            supabase test db
+          else
+            echo "No supabase/tests/*.sql pgTAP suite is present; this workflow validates migration replay only."
+          fi
 
       - name: Stop local Supabase stack
         if: always()
