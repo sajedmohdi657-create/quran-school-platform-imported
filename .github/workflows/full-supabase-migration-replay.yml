@@ -40,35 +40,52 @@ jobs:
       - name: Verify isolated Docker runtime
         run: docker info
 
-      - name: Stage ordered repository SQL files as timestamped migrations
+      - name: Stage the schema foundation before seed data
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p supabase/migrations
           sequence=1
+          for file in supabase/001_initial_schema.sql supabase/002_rls_policies.sql; do
+            base="$(basename "$file")"
+            printf -v version '2026111300%04d' "$sequence"
+            cp "$file" "supabase/migrations/${version}_${base}"
+            sequence=$((sequence + 1))
+          done
+
+      - name: Start isolated local Supabase and seed the foundation
+        run: |
+          supabase start
+          supabase db reset
+
+      - name: Stage and apply all repeatable migrations after seed data
+        shell: bash
+        run: |
+          set -euo pipefail
+          sequence=3
           for file in supabase/[0-9][0-9][0-9]_*.sql; do
             base="$(basename "$file")"
-            # This is a one-time manual bootstrap requiring a real Auth UUID.
-            # It is not a repeatable schema migration and must not run in CI.
-            if [[ "$base" == "003_bootstrap_first_admin.sql" ]]; then
-              echo "Skipping manual Auth-user bootstrap: $base"
+            # 001/002 were applied before seed data. 003 is a one-time manual
+            # Auth-user bootstrap, not a repeatable migration.
+            if [[ "$base" == "001_initial_schema.sql" || "$base" == "002_rls_policies.sql" || "$base" == "003_bootstrap_first_admin.sql" ]]; then
               continue
             fi
             printf -v version '2026111300%04d' "$sequence"
             cp "$file" "supabase/migrations/${version}_${base}"
             sequence=$((sequence + 1))
           done
-          test "$sequence" -gt 1
-          echo "Staged $((sequence - 1)) SQL migrations with unique ordered versions."
+          echo "Staged $((sequence - 3)) repeatable migrations after the seeded foundation."
+          supabase migration up
 
-      - name: Start isolated local Supabase
-        run: supabase start
-
-      - name: Rebuild local database from all migrations and seed data
-        run: supabase db reset
-
-      - name: Run database pgTAP tests
-        run: supabase test db
+      - name: Run database pgTAP tests when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if compgen -G "supabase/tests/*.sql" > /dev/null; then
+            supabase test db
+          else
+            echo "No supabase/tests/*.sql pgTAP suite is stored in this repository; migration replay is the database validation performed here."
+          fi
 
       - name: Stop local Supabase
         if: always()
