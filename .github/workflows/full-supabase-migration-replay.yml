@@ -48,6 +48,12 @@ jobs:
           sequence=1
           for file in supabase/[0-9][0-9][0-9]_*.sql; do
             base="$(basename "$file")"
+            # This is a one-time manual bootstrap requiring a real Auth UUID.
+            # It is not a repeatable schema migration and must not run in CI.
+            if [[ "$base" == "003_bootstrap_first_admin.sql" ]]; then
+              echo "Skipping manual Auth-user bootstrap: $base"
+              continue
+            fi
             printf -v version '2026111300%04d' "$sequence"
             cp "$file" "supabase/migrations/${version}_${base}"
             sequence=$((sequence + 1))
