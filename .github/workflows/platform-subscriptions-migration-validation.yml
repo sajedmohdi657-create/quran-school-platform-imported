@@ -59,28 +59,36 @@ jobs:
           supabase start
           supabase db reset
 
-      - name: Stage and apply repeatable baseline migrations after seed
+      - name: Stage and apply repeatable baseline migrations 004–081 after seed
         shell: bash
         run: |
           set -euo pipefail
           sequence=4
           for file in supabase/[0-9][0-9][0-9]_*.sql; do
             base="$(basename "$file")"
-            if [[ "$base" == "001_initial_schema.sql" || "$base" == "002_rls_policies.sql" || "$base" == "003_bootstrap_first_admin.sql" || "$base" == 082_* ]]; then
+            if [[ "$base" == "001_initial_schema.sql" || "$base" == "002_rls_policies.sql" || "$base" == "003_bootstrap_first_admin.sql" || "$base" == 08[2-9]_* ]]; then
               continue
             fi
             printf -v version '20261106%06d' "$sequence"
             cp "$file" "supabase/migrations/${version}_${base}"
             sequence=$((sequence + 1))
           done
-          echo "Applying repeatable migrations 004–081; the one-time Auth bootstrap is intentionally excluded."
+          echo "Applying repeatable migrations 004–081; one-time Auth bootstrap and subscription migrations are held back."
           supabase migration up
 
-      - name: Apply migration 082 after seed data and baseline migrations
+      - name: Apply migration 082 after baseline migrations
         shell: bash
         run: |
           set -euo pipefail
           cp /tmp/082_platform_subscriptions_foundation.sql supabase/migrations/20261106000082_082_platform_subscriptions_foundation.sql
+          supabase migration up
+
+      - name: Apply later repeatable migrations 083–084
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp supabase/083_subscription_plan_range_bounds.sql supabase/migrations/20261106000083_083_subscription_plan_range_bounds.sql
+          cp supabase/084_attendance_transactional_sync.sql supabase/migrations/20261106000084_084_attendance_transactional_sync.sql
           supabase migration up
 
       - name: Run pgTAP migration and security assertions when present
