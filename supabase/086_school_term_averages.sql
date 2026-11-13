@@ -11,8 +11,8 @@ create table public.school_term_averages (
   term text not null,
   average numeric(5,2) not null,
   notes text,
-  created_by uuid not null default auth.uid(),
-  updated_by uuid not null default auth.uid(),
+  created_by uuid not null default auth.uid() references public.profiles(id),
+  updated_by uuid not null default auth.uid() references public.profiles(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint school_term_averages_student_scope_fk
@@ -43,7 +43,13 @@ create index school_term_averages_scope_idx
 
 alter table public.school_term_averages enable row level security;
 revoke all on public.school_term_averages from public, anon, authenticated;
-grant select, insert, update on public.school_term_averages to authenticated;
+grant select on public.school_term_averages to authenticated;
+grant insert (
+  school_id, branch_id, class_id, student_id, academic_year, term, average, notes
+) on public.school_term_averages to authenticated;
+grant update (
+  academic_year, term, average, notes
+) on public.school_term_averages to authenticated;
 
 create policy school_term_averages_select_authorized
 on public.school_term_averages
