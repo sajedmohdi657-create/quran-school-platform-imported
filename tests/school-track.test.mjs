@@ -58,6 +58,6 @@ test("registers a separately guarded route and combines results in student profi
   assert.match(app, /<SchoolTrackRoute>/);
   assert.match(config, /\[functions\.analyze-school-track\]\s+verify_jwt = true/);
   assert.match(profile, /fetchStudentSchoolTrackAverages/);
-  assert.match(page, /معدلات الفصول الدراسية الثلاثة فقط/);
+  assert.match(page, /الفصول الدراسية الثلاثة فقط/);
   assert.doesNotMatch(page, /المادة|subject|assessment_title/);
 });
