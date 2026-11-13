@@ -96,8 +96,8 @@ function parseBody(value: unknown): { schoolId: string; studentId: string; local
 function noDataAnalysis(quranDataIncluded: boolean, locale: AnalysisLocale): SafeAnalysis {
   return {
     summary: locale === "en"
-      ? "There is not enough data for a reliable analysis yet. Record school results or Quran progress, then try again."
-      : "لا تتوفر نتائج كافية لإعداد تحليل موثوق بعد. سجّل نتائج مدرسية أو متابعة قرآنية ثم أعد المحاولة.",
+      ? "There is not enough data for a reliable analysis yet. Record term averages or Quran progress, then try again."
+      : "لا تتوفر نتائج كافية لإعداد تحليل موثوق بعد. سجّل معدلات الفصول أو متابعة قرآنية ثم أعد المحاولة.",
     strengths: [],
     focusAreas: [],
     actions: [],
