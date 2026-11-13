@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { GraduationCap, Save, RefreshCw } from "lucide-react";
+import { Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, PageHeader, SectionHeader } from "@/components/ui/app-primitives";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,6 @@ export default function SchoolTrackAverages() {
       <PageHeader
         title="المسار الدراسي"
         description="المعدلات النهائية للفصول الدراسية الثلاثة فقط، دون إدراج المواد أو تفاصيل علاماتها."
-        icon={GraduationCap}
       />
       <section className="grid gap-3 sm:grid-cols-3">
         {termValues.map(({ term: label, row }) => (
