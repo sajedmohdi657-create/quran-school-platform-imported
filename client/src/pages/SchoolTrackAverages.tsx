@@ -126,18 +126,43 @@ export default function SchoolTrackAverages() {
       return;
     }
     setSaving(true);
-    const { error } = await getSupabaseClient()
+    const client = getSupabaseClient();
+    const year = academicYear.trim();
+    if (!/^\\d{4}[-/]\\d{4}$/.test(year)) {
+      setSaving(false);
+      toast.error("اكتب السنة الدراسية بصيغة 2026/2027.");
+      return;
+    }
+    const { data: existing, error: lookupError } = await client
       .from("school_term_averages")
-      .upsert({
-        school_id: school.id,
-        branch_id: selectedStudent.branch_id,
-        class_id: selectedStudent.class_id,
-        student_id: selectedStudent.id,
-        academic_year: academicYear.trim(),
-        term,
-        average: value,
-        notes: notes.trim() || null,
-      }, { onConflict: "school_id,student_id,academic_year,term" });
+      .select("id")
+      .eq("school_id", school.id)
+      .eq("student_id", selectedStudent.id)
+      .eq("academic_year", year)
+      .eq("term", term)
+      .maybeSingle();
+    let error = lookupError;
+    if (!error && existing) {
+      const result = await client
+        .from("school_term_averages")
+        .update({ academic_year: year, term, average: value, notes: notes.trim() || null })
+        .eq("id", existing.id);
+      error = result.error;
+    } else if (!error) {
+      const result = await client
+        .from("school_term_averages")
+        .insert({
+          school_id: school.id,
+          branch_id: selectedStudent.branch_id,
+          class_id: selectedStudent.class_id,
+          student_id: selectedStudent.id,
+          academic_year: year,
+          term,
+          average: value,
+          notes: notes.trim() || null,
+        });
+      error = result.error;
+    }
     setSaving(false);
     if (error) {
       toast.error("تعذر حفظ المعدل. تحقق من صلاحياتك ومن السنة الدراسية.");
