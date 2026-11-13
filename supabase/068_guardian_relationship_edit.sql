@@ -207,13 +207,16 @@ begin
     changed_fields := array_append(changed_fields, 'is_primary');
   end if;
 
-  if can_view_contacts
-    and normalized_phone is distinct from case
-      when relationship_record.guardian_phone_override_set then relationship_record.guardian_phone_override
-      else guardian_profile_phone
-    end
-  then
-    changed_fields := array_append(changed_fields, 'guardian_phone');
+  if can_view_contacts then
+    if relationship_record.guardian_phone_override_set then
+      if normalized_phone is distinct from relationship_record.guardian_phone_override then
+        changed_fields := array_append(changed_fields, 'guardian_phone');
+      end if;
+    else
+      if normalized_phone is distinct from guardian_profile_phone then
+        changed_fields := array_append(changed_fields, 'guardian_phone');
+      end if;
+    end if;
   end if;
 
   if cardinality(changed_fields) = 0 then
