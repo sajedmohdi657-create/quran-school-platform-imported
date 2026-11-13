@@ -9,7 +9,7 @@ const [migration, handler, services, app, config, page, profile] = await Promise
   read("supabase/functions/analyze-school-track/services.ts"),
   read("client/src/App.tsx"),
   read("supabase/config.toml"),
-  read("client/src/pages/SchoolTrack.tsx"),
+  read("client/src/pages/SchoolTrackAverages.tsx"),
   read("client/src/lib/student-360.ts"),
 ]);
 
@@ -37,11 +37,16 @@ test("protects result reads and audited corrections through RLS without browser 
 test("limits AI analysis to authenticated, authorized pseudonymous data", () => {
   assert.match(handler, /getBearerToken/);
   assert.match(handler, /canViewSchoolTrack/);
+  assert.match(handler, /listTermAverages/);
+  assert.match(handler, /termAverages/);
+  assert.doesNotMatch(handler, /SchoolAssessmentSignal|schoolResults|subject|assessmentType|score|maxScore/);
   assert.match(handler, /canViewQuranProgress/);
   assert.match(handler, /MAX_REQUESTS_PER_WINDOW/);
   assert.match(handler, /slice\(0, 40\)/);
   assert.match(services, /Authorization: `Bearer \$\{token\}`/);
   assert.match(services, /can_access_school_track_class/);
+  assert.match(services, /from\("school_term_averages"\)/);
+  assert.doesNotMatch(services, /school_track_results|subject|assessment_type|score|max_score/);
   assert.match(services, /can_access_memorization_class/);
   assert.match(services, /OPENAI_API_KEY/);
   assert.doesNotMatch(services, /SUPABASE_SERVICE_ROLE_KEY/);
@@ -52,7 +57,7 @@ test("registers a separately guarded route and combines results in student profi
   assert.match(app, /path="\/school-track"/);
   assert.match(app, /<SchoolTrackRoute>/);
   assert.match(config, /\[functions\.analyze-school-track\]\s+verify_jwt = true/);
-  assert.match(profile, /fetchStudentSchoolTrackResults/);
-  assert.match(page, /مساعد المتابعة الذكي/);
-  assert.match(page, /getSupabaseClient\(\)\.functions\.invoke\(\s*"analyze-school-track"/);
+  assert.match(profile, /fetchStudentSchoolTrackAverages/);
+  assert.match(page, /معدلات الفصول الدراسية الثلاثة فقط/);
+  assert.doesNotMatch(page, /المادة|subject|assessment_title/);
 });
