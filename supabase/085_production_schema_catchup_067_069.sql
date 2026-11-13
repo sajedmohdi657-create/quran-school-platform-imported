@@ -8,7 +8,6 @@ begin
   if to_regclass('public.school_track_results') is null then
     execute $migration_067$
 -- School-track assessment results with branch/class authorization and append-only audit history.
-begin;
 
 -- The composite key keeps every result tied to the student's actual tenant and branch.
 create unique index if not exists students_school_branch_id_unique_idx
