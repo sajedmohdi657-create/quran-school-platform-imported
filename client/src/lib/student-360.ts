@@ -20,8 +20,8 @@ import {
   type StudentStatus,
 } from "./students";
 import {
-  fetchStudentSchoolTrackResults,
-  type SchoolTrackResult,
+  fetchStudentSchoolTrackAverages,
+  type SchoolTermAverage,
 } from "./school-track";
 
 export type Student360Profile = {
@@ -61,7 +61,7 @@ export type Student360Data = {
   profile: Student360Profile;
   attendance: Student360Section<Student360AttendanceRecord[]>;
   memorization: Student360Section<MemorizationRecord[]>;
-  schoolTrack: Student360Section<SchoolTrackResult[]>;
+  schoolTrack: Student360Section<SchoolTermAverage[]>;
   finance: Student360Section<Student360Finance>;
 };
 
@@ -322,7 +322,7 @@ export async function fetchStudent360(
   if (!classId) {
     const results = await Promise.allSettled([
       fetchFinance(client, schoolId, profile.branchId, profile.id),
-      fetchStudentSchoolTrackResults(
+      fetchStudentSchoolTrackAverages(
         schoolId,
         profile.branchId,
         null,
@@ -377,7 +377,7 @@ export async function fetchStudent360(
       );
     })(),
     fetchFinance(client, schoolId, profile.branchId, profile.id),
-    fetchStudentSchoolTrackResults(
+    fetchStudentSchoolTrackAverages(
       schoolId,
       profile.branchId,
       classId,
