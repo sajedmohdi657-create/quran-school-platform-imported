@@ -128,7 +128,7 @@ export default function SchoolTrackAverages() {
     setSaving(true);
     const client = getSupabaseClient();
     const year = academicYear.trim();
-    if (!/^\\d{4}[-/]\\d{4}$/.test(year)) {
+    if (!/^\d{4}[-/]\d{4}$/.test(year)) {
       setSaving(false);
       toast.error("اكتب السنة الدراسية بصيغة 2026/2027.");
       return;
