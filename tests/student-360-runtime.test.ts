@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   attendanceAccess: vi.fn(),
   memorizationAccess: vi.fn(),
   memorizationRecords: vi.fn(),
-  schoolTrackResults: vi.fn(async (..._args: unknown[]) => null as unknown),
+  schoolTrackAverages: vi.fn(async (..._args: unknown[]) => null as unknown),
 }));
 
 vi.mock("@/lib/attendance", () => ({
@@ -18,7 +18,7 @@ vi.mock("@/lib/memorization", () => ({
 }));
 
 vi.mock("@/lib/school-track", () => ({
-  fetchStudentSchoolTrackResults: mocks.schoolTrackResults,
+  fetchStudentSchoolTrackAverages: mocks.schoolTrackAverages,
 }));
 
 import { fetchStudent360 } from "@/lib/student-360";
@@ -78,19 +78,12 @@ describe("Student 360 read-only access boundaries", () => {
       branch_id: "branch-1",
       class_id: null,
       student_id: "student-1",
-      subject: "الرياضيات",
-      assessment_title: "الفرض الأول",
-      assessment_type: "test",
       academic_year: "2026/2027",
       term: "الفصل الأول",
-      assessment_date: "2026-10-03",
-      score: 16,
-      max_score: 20,
-      notes: null,
-      created_at: "2026-10-03T09:00:00Z",
+      average: 16.5,
       updated_at: "2026-10-03T09:00:00Z",
     };
-    mocks.schoolTrackResults.mockResolvedValueOnce([schoolResult]);
+    mocks.schoolTrackAverages.mockResolvedValueOnce([schoolResult]);
     const { client } = buildClient({
       student: {
         id: "student-1",
