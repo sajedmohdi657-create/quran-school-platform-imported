@@ -37,7 +37,7 @@ test("protects result reads and audited corrections through RLS without browser 
 
 test("keeps the audit function trigger-only and blocks direct RPC execution", () => {
   assert.match(migration, /create trigger school_track_results_audit/);
-  assert.match(auditMigration, /revoke all on function public\\.audit_school_track_result\\(\\)/);
+  assert.match(auditMigration, /revoke all on function public\.audit_school_track_result\(\)/);
   assert.match(auditMigration, /from public, anon, authenticated/);
 });
 
