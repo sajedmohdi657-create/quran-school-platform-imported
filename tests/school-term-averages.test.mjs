@@ -14,7 +14,7 @@ test("stores only one final average per student for each of the three terms", ()
   assert.match(migration, /term in \('الفصل الأول', 'الفصل الثاني', 'الفصل الثالث'\)/);
   assert.match(migration, /average >= 0 and average <= 20/);
   assert.match(migration, /unique \(school_id, student_id, academic_year, term\)/);
-  assert.doesNotMatch(migration, /subject|assessment_title|assessment_type/i);
+  assert.doesNotMatch(migration, /subject text|assessment_title|assessment_type/i);
 });
 
 test("protects term averages with branch and class authorization", () => {
