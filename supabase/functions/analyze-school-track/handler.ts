@@ -47,7 +47,7 @@ export type SchoolTrackAnalysisDependencies = {
   authenticate(token: string): Promise<string>;
   findStudent(token: string, schoolId: string, studentId: string): Promise<AnalysisStudent | null>;
   canViewSchoolTrack(token: string, student: AnalysisStudent): Promise<boolean>;
-  listTermAverages(token: string, schoolId: string, studentId: string): Promise<TermAverageSignal[]>;
+  listTermAverages(token: string, schoolId: string, branchId: string, studentId: string): Promise<TermAverageSignal[]>;
   canViewQuranProgress(token: string, student: AnalysisStudent): Promise<boolean>;
   listQuranProgress(token: string, studentId: string): Promise<QuranProgressSignal[]>;
   analyze(features: AnalysisFeatures, locale: AnalysisLocale): Promise<SafeAnalysis>;
@@ -189,6 +189,7 @@ export function createSchoolTrackAnalysisHandler(
       const termAverages = (await dependencies.listTermAverages(
         token,
         parsed.schoolId,
+        student.branchId,
         parsed.studentId
       ))
         .slice(0, 12)
