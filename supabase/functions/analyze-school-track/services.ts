@@ -60,7 +60,7 @@ async function generateAnalysis(
     ? `${root}/chat/completions`
     : `${root}/v1/chat/completions`;
   const prompt = {
-    schoolResults: features.schoolResults,
+    termAverages: features.termAverages,
     quranProgress: features.quranProgress,
   };
   const response = await fetch(endpoint, {
@@ -80,7 +80,7 @@ async function generateAnalysis(
           role: "system",
           content: [
             "أنت مساعد تربوي يدعم المعلم في متابعة الطالب فقط.",
-            "حلل الاتجاهات الواضحة في درجات المواد ومؤشرات متابعة القرآن، وقدم اقتراحات قصيرة قابلة للتحقق.",
+            "حلل الاتجاهات الواضحة في معدلات الفصول الدراسية الثلاثة ومؤشرات متابعة القرآن، وقدم اقتراحات قصيرة قابلة للتحقق.",
             "لا تشخّص اضطرابات أو حالات صحية أو نفسية، ولا تستنتج معلومات لا تدعمها البيانات.",
             "لا تصدر حكم نجاح/رسوب رسميًا. وضح محدودية البيانات عند الحاجة.",
             "أعد JSON صالحًا فقط بالحقول: summary كنص، strengths كمصفوفة نصوص، focusAreas كمصفوفة نصوص، actions كمصفوفة نصوص.",
@@ -182,22 +182,19 @@ export function createSchoolTrackAnalysisDependencies(): SchoolTrackAnalysisDepe
       ]);
       return canView || canManage;
     },
-    listSchoolResults: async (token, studentId) => {
+    listTermAverages: async (token, schoolId, studentId) => {
       const { data, error } = await userClient(token)
-        .from("school_track_results")
-        .select("subject, assessment_type, academic_year, term, assessment_date, score, max_score")
+        .from("school_term_averages")
+        .select("academic_year, term, average")
+        .eq("school_id", schoolId)
         .eq("student_id", studentId)
-        .order("assessment_date", { ascending: false })
-        .limit(40);
+        .order("academic_year", { ascending: false })
+        .limit(12);
       if (error) throw error;
       return (data ?? []).map(row => ({
-        subject: row.subject,
-        assessmentType: row.assessment_type,
         academicYear: row.academic_year,
         term: row.term,
-        date: row.assessment_date,
-        score: Number(row.score),
-        maxScore: Number(row.max_score),
+        average: Number(row.average),
       }));
     },
     canViewQuranProgress: async (token, student) => {
