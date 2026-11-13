@@ -1,0 +1,69 @@
+name: Full Supabase Migration Replay
+
+on:
+  push:
+    branches:
+      - "test/**"
+    paths:
+      - "supabase/**"
+      - ".github/workflows/full-supabase-migration-replay.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - ".github/workflows/full-supabase-migration-replay.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-supabase-migration-replay-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay:
+    name: Replay every SQL migration on isolated local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+
+      - name: Verify isolated Docker runtime
+        run: docker info
+
+      - name: Stage ordered repository SQL files as timestamped migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p supabase/migrations
+          sequence=1
+          for file in supabase/[0-9][0-9][0-9]_*.sql; do
+            base="$(basename "$file")"
+            printf -v version '2026111300%04d' "$sequence"
+            cp "$file" "supabase/migrations/${version}_${base}"
+            sequence=$((sequence + 1))
+          done
+          test "$sequence" -gt 1
+          echo "Staged $((sequence - 1)) SQL migrations with unique ordered versions."
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Rebuild local database from all migrations and seed data
+        run: supabase db reset
+
+      - name: Run database pgTAP tests
+        run: supabase test db
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
