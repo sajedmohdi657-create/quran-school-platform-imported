@@ -182,11 +182,12 @@ export function createSchoolTrackAnalysisDependencies(): SchoolTrackAnalysisDepe
       ]);
       return canView || canManage;
     },
-    listTermAverages: async (token, schoolId, studentId) => {
+    listTermAverages: async (token, schoolId, branchId, studentId) => {
       const { data, error } = await userClient(token)
         .from("school_term_averages")
         .select("academic_year, term, average")
         .eq("school_id", schoolId)
+        .eq("branch_id", branchId)
         .eq("student_id", studentId)
         .order("academic_year", { ascending: false })
         .limit(12);
