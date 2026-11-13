@@ -357,7 +357,6 @@ $migration_067$;
 -- Contact overrides are relationship-local: a guardian may share one profile
 -- across students and schools, so school staff must not edit the global profile.
 
-begin;
 
 alter table public.student_guardians
   add column guardian_name_override text,
@@ -677,7 +676,6 @@ $migration_068$;
 -- QuranOS V2 - progressive registration details captured from the first stage.
 -- These details remain optional so a lead can be saved with only essential contact data.
 
-begin;
 
 alter table public.registration_leads
   add column education_level text,
