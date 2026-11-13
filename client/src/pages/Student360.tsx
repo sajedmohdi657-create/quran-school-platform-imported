@@ -28,11 +28,6 @@ import {
 import { formatEducation, translateStudentStatus } from "@/lib/students";
 import { StudentAlertSummary } from "@/components/StudentAlertSummary";
 import {
-  evaluateSchoolTrackScore,
-  getSchoolTrackEvaluationLabel,
-  getSchoolTrackPercentage,
-} from "@/lib/school-track";
-import {
   EmptyState,
   PageHeader,
   SectionHeader,
@@ -46,10 +41,6 @@ function formatDate(value: string): string {
   return Number.isNaN(date.getTime())
     ? "—"
     : new Intl.DateTimeFormat("ar-DZ-u-nu-latn", { dateStyle: "medium" }).format(date);
-}
-
-function formatSchoolPercent(value: number): string {
-  return `${new Intl.NumberFormat("ar-DZ-u-nu-latn", { maximumFractionDigits: 1 }).format(value)}%`;
 }
 
 function attendanceLabel(status: string): string {
@@ -140,9 +131,9 @@ export default function Student360() {
       data.schoolTrack.data.forEach(record => {
         nextActivities.push({
           id: `school-track-${record.id}`,
-          date: record.assessment_date,
-          label: "نتيجة مدرسية",
-          detail: `${record.subject} · ${record.score}/${record.max_score}`,
+          date: record.updated_at,
+          label: "معدل فصلي",
+          detail: record.term + " · " + record.average.toFixed(2) + "/20",
         });
       });
     }
@@ -222,11 +213,7 @@ export default function Student360() {
     attendance?.filter(record => record.status === "absent").length ?? 0;
   const latestMemorization = memorization?.[0] ?? null;
   const schoolTrackAverage = schoolTrack?.length
-    ? schoolTrack.reduce(
-        (total, record) =>
-          total + getSchoolTrackPercentage(record.score, record.max_score),
-        0
-      ) / schoolTrack.length
+    ? schoolTrack.reduce((total, record) => total + record.average, 0) / schoolTrack.length
     : null;
 
   return (
@@ -240,7 +227,7 @@ export default function Student360() {
             {data.schoolTrack.state === "ready" && (
               <Button variant="outline" onClick={() => setLocation("/school-track?studentId=" + profile.id)} className="min-h-11">
                 <GraduationCap className="size-4" />
-                نتائج المسار المدرسي
+                المسار الدراسي
               </Button>
             )}
             <Button
@@ -350,9 +337,9 @@ export default function Student360() {
           )}
           {schoolTrack && (
             <StatCard
-              label="نتائج المسار المدرسي"
+              label="معدلات الفصول"
               value={String(schoolTrack.length)}
-              hint={schoolTrackAverage === null ? "لا توجد نتائج" : `متوسط آخر النتائج: ${schoolTrackAverage.toFixed(1)}%`}
+              hint={schoolTrackAverage === null ? "لا توجد معدلات" : `متوسط المعدلات: ${schoolTrackAverage.toFixed(2)}/20`}
               icon={GraduationCap}
               tone="green"
             />
@@ -477,42 +464,29 @@ export default function Student360() {
       {data.schoolTrack.state !== "hidden" && (
         <section>
           <SectionHeader
-            title="نتائج المسار المدرسي"
-            description="نتائج الامتحانات والتقويم بجانب متابعة الحفظ والمراجعة في الملف الموحد."
+            title="المسار الدراسي"
+            description="معدلات الفصول الدراسية الثلاثة فقط، دون عرض المواد أو علامات الاختبارات."
           />
           {data.schoolTrack.state === "error" ? (
             <EmptyState
-              title="تعذر تحميل نتائج المدرسة"
+              title="تعذر تحميل معدلات الفصول"
               description="لم يؤثر هذا الخطأ على سجل الحفظ أو بقية ملف الطالب."
             />
           ) : schoolTrack && schoolTrack.length > 0 ? (
-            <div className="overflow-hidden rounded-2xl border border-[#E5EDE7] bg-white">
-              <div className="divide-y divide-[#EEF3EF]">
-                {schoolTrack.map(record => {
-                  const percentage = getSchoolTrackPercentage(record.score, record.max_score);
-                  const evaluation = evaluateSchoolTrackScore(record.score, record.max_score);
-                  return (
-                    <article key={record.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="font-bold text-[#244E3B]">{record.subject} · {record.assessment_title}</p>
-                        <p className="mt-1 text-xs text-[#718377]">{record.academic_year} · {record.term} · {formatDate(record.assessment_date)}</p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-[#E8F3EC] px-3 py-1 text-xs font-bold text-[#17663B]">
-                        {record.score}/{record.max_score} · {formatSchoolPercent(percentage)} · {getSchoolTrackEvaluationLabel(evaluation)}
-                      </span>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="border-t border-[#EEF3EF] p-3 text-center">
-                <Button variant="outline" onClick={() => setLocation("/school-track?studentId=" + profile.id)}>عرض التقارير والتحليل الذكي</Button>
-              </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {schoolTrack.map(record => (
+                <article key={record.id} className="rounded-2xl border border-[#E5EDE7] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold text-[#718377]">{record.academic_year}</p>
+                  <p className="mt-1 font-bold text-[#244E3B]">{record.term}</p>
+                  <p className="mt-3 text-2xl font-extrabold text-[#17663B]">{record.average.toFixed(2)} <span className="text-sm font-semibold text-[#718377]">/ 20</span></p>
+                </article>
+              ))}
             </div>
           ) : (
             <EmptyState
               icon={GraduationCap}
-              title="لا توجد نتائج امتحانات مسجلة"
-              description="يمكن تسجيل نتائج الطالب من صفحة المسار المدرسي عند توفر صلاحية الإدارة."
+              title="لا توجد معدلات فصول مسجلة"
+              description="تظهر هنا معدلات الفصول الأول والثاني والثالث عند تسجيلها."
             />
           )}
         </section>

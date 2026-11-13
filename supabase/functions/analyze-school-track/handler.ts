@@ -15,14 +15,10 @@ export type AnalysisStudent = {
   branchId: string;
   classId: string | null;
 };
-export type SchoolAssessmentSignal = {
-  subject: string;
-  assessmentType: string;
+export type TermAverageSignal = {
   academicYear: string;
   term: string;
-  date: string;
-  score: number;
-  maxScore: number;
+  average: number;
 };
 export type QuranProgressSignal = {
   date: string;
@@ -34,7 +30,7 @@ export type QuranProgressSignal = {
   errorsCount: number;
 };
 export type AnalysisFeatures = {
-  schoolResults: SchoolAssessmentSignal[];
+  termAverages: TermAverageSignal[];
   quranProgress: QuranProgressSignal[] | null;
 };
 export type SafeAnalysis = {
@@ -51,7 +47,7 @@ export type SchoolTrackAnalysisDependencies = {
   authenticate(token: string): Promise<string>;
   findStudent(token: string, schoolId: string, studentId: string): Promise<AnalysisStudent | null>;
   canViewSchoolTrack(token: string, student: AnalysisStudent): Promise<boolean>;
-  listSchoolResults(token: string, studentId: string): Promise<SchoolAssessmentSignal[]>;
+  listTermAverages(token: string, schoolId: string, branchId: string, studentId: string): Promise<TermAverageSignal[]>;
   canViewQuranProgress(token: string, student: AnalysisStudent): Promise<boolean>;
   listQuranProgress(token: string, studentId: string): Promise<QuranProgressSignal[]>;
   analyze(features: AnalysisFeatures, locale: AnalysisLocale): Promise<SafeAnalysis>;
@@ -100,8 +96,8 @@ function parseBody(value: unknown): { schoolId: string; studentId: string; local
 function noDataAnalysis(quranDataIncluded: boolean, locale: AnalysisLocale): SafeAnalysis {
   return {
     summary: locale === "en"
-      ? "There is not enough data for a reliable analysis yet. Record school results or Quran progress, then try again."
-      : "لا تتوفر نتائج كافية لإعداد تحليل موثوق بعد. سجّل نتائج مدرسية أو متابعة قرآنية ثم أعد المحاولة.",
+      ? "There is not enough data for a reliable analysis yet. Record term averages or Quran progress, then try again."
+      : "لا تتوفر نتائج كافية لإعداد تحليل موثوق بعد. سجّل معدلات الفصول أو متابعة قرآنية ثم أعد المحاولة.",
     strengths: [],
     focusAreas: [],
     actions: [],
@@ -190,18 +186,19 @@ export function createSchoolTrackAnalysisHandler(
         return errorResponse("not_authorized", 403, origin, requestId);
       }
 
-      const schoolResults = (await dependencies.listSchoolResults(token, parsed.studentId))
-        .slice(0, 40)
+      const termAverages = (await dependencies.listTermAverages(
+        token,
+        parsed.schoolId,
+        student.branchId,
+        parsed.studentId
+      ))
+        .slice(0, 12)
         .map(row => ({
-          subject: String(row.subject).slice(0, 100),
-          assessmentType: String(row.assessmentType).slice(0, 24),
           academicYear: String(row.academicYear).slice(0, 20),
           term: String(row.term).slice(0, 60),
-          date: String(row.date).slice(0, 10),
-          score: Number(row.score),
-          maxScore: Number(row.maxScore),
+          average: Number(row.average),
         }))
-        .filter(row => Number.isFinite(row.score) && Number.isFinite(row.maxScore) && row.maxScore > 0);
+        .filter(row => Number.isFinite(row.average) && row.average >= 0 && row.average <= 20);
 
       let quranProgress: QuranProgressSignal[] | null = null;
       if (student.classId && await dependencies.canViewQuranProgress(token, student)) {
@@ -220,10 +217,10 @@ export function createSchoolTrackAnalysisHandler(
       }
 
       const quranDataIncluded = Boolean(quranProgress?.length);
-      if (!schoolResults.length && !quranDataIncluded) {
+      if (!termAverages.length && !quranDataIncluded) {
         return jsonResponse({ ok: true, ...noDataAnalysis(false, parsed.locale) }, 200, origin, requestId);
       }
-      const analysis = await dependencies.analyze({ schoolResults, quranProgress }, parsed.locale);
+      const analysis = await dependencies.analyze({ termAverages, quranProgress }, parsed.locale);
       return jsonResponse({ ok: true, ...analysis, quranDataIncluded }, 200, origin, requestId);
     } catch (error) {
       dependencies.log?.({ event: "school_track_analysis_failed", requestId });

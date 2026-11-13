@@ -24,7 +24,6 @@ type AverageRow = {
   academic_year: string;
   term: Term;
   average: number;
-  notes: string | null;
   updated_at: string;
 };
 
@@ -44,7 +43,6 @@ export default function SchoolTrackAverages() {
   const [academicYear, setAcademicYear] = useState(getCurrentAcademicYear());
   const [term, setTerm] = useState<Term>("الفصل الأول");
   const [average, setAverage] = useState("");
-  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [canManage, setCanManage] = useState(false);
@@ -59,7 +57,7 @@ export default function SchoolTrackAverages() {
   async function loadAverages(currentSchoolId: string, year: string) {
     const { data, error } = await getSupabaseClient()
       .from("school_term_averages")
-      .select("id, student_id, branch_id, class_id, academic_year, term, average, notes, updated_at")
+      .select("id, student_id, branch_id, class_id, academic_year, term, average, updated_at")
       .eq("school_id", currentSchoolId)
       .eq("academic_year", year)
       .order("student_id")
@@ -145,7 +143,7 @@ export default function SchoolTrackAverages() {
     if (!error && existing) {
       const result = await client
         .from("school_term_averages")
-        .update({ academic_year: year, term, average: value, notes: notes.trim() || null })
+        .update({ academic_year: year, term, average: value })
         .eq("id", existing.id);
       error = result.error;
     } else if (!error) {
@@ -159,7 +157,6 @@ export default function SchoolTrackAverages() {
           academic_year: year,
           term,
           average: value,
-          notes: notes.trim() || null,
         });
       error = result.error;
     }
@@ -170,7 +167,6 @@ export default function SchoolTrackAverages() {
     }
     toast.success("تم حفظ معدل الفصل.");
     setAverage("");
-    setNotes("");
     await refresh();
   }
 
@@ -224,9 +220,6 @@ export default function SchoolTrackAverages() {
             </label>
             <label className="text-sm font-semibold">المعدل النهائي (من 20)
               <input type="number" min="0" max="20" step="0.01" value={average} onChange={event => setAverage(event.target.value)} required className="mt-1 min-h-11 w-full rounded-xl border border-[#D6E2D9] px-3" />
-            </label>
-            <label className="text-sm font-semibold sm:col-span-2">ملاحظة عامة (اختيارية)
-              <textarea value={notes} onChange={event => setNotes(event.target.value)} maxLength={1000} rows={2} className="mt-1 w-full rounded-xl border border-[#D6E2D9] p-3" />
             </label>
             <div className="sm:col-span-2">
               <Button type="submit" disabled={saving || !selectedStudent || !manageableStudents.some(item => item.id === studentId)} className="min-h-11 gap-2"><Save size={16} />{saving ? "جارٍ الحفظ..." : "حفظ معدل الفصل"}</Button>

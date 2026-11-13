@@ -30,9 +30,9 @@ test("keeps attendance and memorization scoped to existing module access", () =>
   assert.match(profile, /if \(!canView && !canManage\) return null/);
   assert.match(profile, /fetchStudentMemorizationRecords/);
   assert.match(page, /data\.memorization\.state !== "hidden"/);
-  assert.match(profile, /fetchStudentSchoolTrackResults/);
+  assert.match(profile, /fetchStudentSchoolTrackAverages/);
   assert.match(page, /data\.schoolTrack\.state !== "hidden"/);
-  assert.match(page, /نتائج الامتحانات والتقويم/);
+  assert.match(page, /معدلات الفصول الدراسية الثلاثة فقط/);
 });
 
 test("shows finance only after existing finance permissions succeed", () => {
