@@ -2198,4 +2198,5 @@ export const EXACT_UI_ENGLISH: Record<string, string> = {
   "سجّل معدل الفصل الأول أو الثاني أو الثالث لهذا الطالب.": "Enter the first, second, or third term average for this student.",
   "من 20": "Out of 20",
   "المعدل النهائي (من 20)": "Final average (out of 20)",
+  "اكتب السنة الدراسية بصيغة 2026/2027.": "Enter the academic year in the format 2026/2027.",
 };
