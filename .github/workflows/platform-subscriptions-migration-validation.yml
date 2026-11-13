@@ -59,7 +59,8 @@ jobs:
           supabase start
           supabase db reset
 
-      - name: Stage and apply repeatable baseline migrations 004–081 after seed
+      - name: Stage and apply repeatable baseline migrations before 082
+        id: stage-baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -73,22 +74,37 @@ jobs:
             cp "$file" "supabase/migrations/${version}_${base}"
             sequence=$((sequence + 1))
           done
-          echo "Applying repeatable migrations 004–081; one-time Auth bootstrap and subscription migrations are held back."
+          echo "next_version=$sequence" >> "$GITHUB_OUTPUT"
+          echo "Applied baseline migrations in lexical order; next migration sequence is $sequence."
           supabase migration up
 
       - name: Apply migration 082 after baseline migrations
+        id: apply-subscriptions
         shell: bash
+        env:
+          NEXT_VERSION: ${{ steps.stage-baseline.outputs.next_version }}
         run: |
           set -euo pipefail
-          cp /tmp/082_platform_subscriptions_foundation.sql supabase/migrations/20261106000082_082_platform_subscriptions_foundation.sql
+          printf -v version '20261106%06d' "$NEXT_VERSION"
+          cp /tmp/082_platform_subscriptions_foundation.sql "supabase/migrations/${version}_082_platform_subscriptions_foundation.sql"
+          next_version=$((NEXT_VERSION + 1))
+          echo "next_version=$next_version" >> "$GITHUB_OUTPUT"
           supabase migration up
 
-      - name: Apply later repeatable migrations 083–084
+      - name: Apply all later repeatable migrations after 082
         shell: bash
+        env:
+          NEXT_VERSION: ${{ steps.apply-subscriptions.outputs.next_version }}
         run: |
           set -euo pipefail
-          cp supabase/083_subscription_plan_range_bounds.sql supabase/migrations/20261106000083_083_subscription_plan_range_bounds.sql
-          cp supabase/084_attendance_transactional_sync.sql supabase/migrations/20261106000084_084_attendance_transactional_sync.sql
+          sequence="$NEXT_VERSION"
+          for file in supabase/08[3-9]_*.sql; do
+            [[ -f "$file" ]] || continue
+            base="$(basename "$file")"
+            printf -v version '20261106%06d' "$sequence"
+            cp "$file" "supabase/migrations/${version}_${base}"
+            sequence=$((sequence + 1))
+          done
           supabase migration up
 
       - name: Run pgTAP migration and security assertions when present
