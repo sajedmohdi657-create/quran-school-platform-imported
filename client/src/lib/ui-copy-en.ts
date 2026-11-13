@@ -2179,7 +2179,6 @@ export const EXACT_UI_ENGLISH: Record<string, string> = {
   "توجد مسودات محفوظة على الجهاز بانتظار المزامنة.": "Drafts saved on this device are waiting to synchronize.",
   "تنبيه: بيانات الطلاب المحفوظة محليًا غير مشفرة؛ استخدم جهازًا موثوقًا.": "Notice: student data saved locally is not encrypted; use a trusted device.",
 
-  "الفصل الأول": "Term 1",
   "الفصل الثاني": "Term 2",
   "الفصل الثالث": "Term 3",
   "تعذر تحميل معدلات الفصول ضمن الصلاحيات الحالية.": "Could not load term averages within your current permissions.",
