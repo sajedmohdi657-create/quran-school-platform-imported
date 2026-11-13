@@ -32,15 +32,11 @@ function dependencies(
     authenticate: async () => "profile-1",
     findStudent: async () => student,
     canViewSchoolTrack: async () => true,
-    listSchoolResults: async () => [{
-      subject: "الرياضيات",
-      assessmentType: "test",
-      academicYear: "2026/2027",
-      term: "الفصل الأول",
-      date: "2026-10-01",
-      score: 15,
-      maxScore: 20,
-    }],
+    listTermAverages: async () => [
+      { academicYear: "2026/2027", term: "الفصل الأول", average: 15.5 },
+      { academicYear: "2026/2027", term: "الفصل الثاني", average: 16.25 },
+      { academicYear: "2026/2027", term: "الفصل الثالث", average: 17 },
+    ],
     canViewQuranProgress: async () => false,
     listQuranProgress: async () => [],
     analyze: async () => ({
@@ -98,7 +94,7 @@ Deno.test("requires authenticated, scoped school-track access before reading res
   let resultsRead = false;
   const handler = createSchoolTrackAnalysisHandler(dependencies({
     canViewSchoolTrack: async () => false,
-    listSchoolResults: async () => {
+    listTermAverages: async () => {
       resultsRead = true;
       return [];
     },
@@ -138,11 +134,11 @@ Deno.test("sends only pseudonymous score signals and only authorized Quran progr
   }
   const features = featureCalls[0];
   if (!features) throw new Error("analysis features were not forwarded");
-  if (!features?.quranProgress?.length || features.schoolResults.length !== 1) {
+  if (!features?.quranProgress?.length || features.termAverages.length !== 3) {
     throw new Error("analysis signals are incomplete");
   }
   const serialized = JSON.stringify(features);
-  if (serialized.includes(studentId) || serialized.includes(schoolId) || serialized.includes("profile-1")) {
+  if (serialized.includes(studentId) || serialized.includes(schoolId) || serialized.includes("profile-1") || serialized.includes("الرياضيات") || serialized.includes("subject")) {
     throw new Error("identifying IDs leaked into the provider payload");
   }
 });
@@ -150,7 +146,7 @@ Deno.test("sends only pseudonymous score signals and only authorized Quran progr
 Deno.test("omits Quran signals when Quran permission is absent and handles empty data", async () => {
   let analyzeCalled = false;
   const handler = createSchoolTrackAnalysisHandler(dependencies({
-    listSchoolResults: async () => [],
+    listTermAverages: async () => [],
     canViewQuranProgress: async () => false,
     listQuranProgress: async () => [{
       date: "2026-10-02",
@@ -177,7 +173,7 @@ Deno.test("limits repeated AI requests per authenticated profile", async () => {
   let time = 1_000;
   const handler = createSchoolTrackAnalysisHandler(dependencies({
     now: () => time,
-    listSchoolResults: async () => [],
+    listTermAverages: async () => [],
   }));
   for (let index = 0; index < 5; index += 1) {
     const response = await handler(request());
@@ -205,7 +201,7 @@ Deno.test("returns a safe setup error when the AI provider key is missing", asyn
 
 Deno.test("returns an English no-data message when requested in English", async () => {
   const handler = createSchoolTrackAnalysisHandler(dependencies({
-    listSchoolResults: async () => [],
+    listTermAverages: async () => [],
   }));
   const response = await handler(request({ schoolId, studentId, locale: "en" }));
   const result = await response.json();
