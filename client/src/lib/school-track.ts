@@ -409,6 +409,66 @@ export async function fetchStudentSchoolTrackResults(
   return ((data ?? []) as Array<Record<string, unknown>>).map(normalizeResult);
 }
 
+
+export type SchoolTermAverage = {
+  id: string;
+  school_id: string;
+  branch_id: string;
+  class_id: string | null;
+  student_id: string;
+  academic_year: string;
+  term: string;
+  average: number;
+  updated_at: string;
+};
+
+const TERM_ORDER = new Map([
+  ["الفصل الأول", 1],
+  ["الفصل الثاني", 2],
+  ["الفصل الثالث", 3],
+]);
+
+export async function fetchStudentSchoolTrackAverages(
+  schoolId: string,
+  branchId: string,
+  classId: string | null,
+  studentId: string,
+  client: SupabaseClient = getSupabaseClient()
+): Promise<SchoolTermAverage[] | null> {
+  const [canView, canManage] = await Promise.all([
+    permission(client, schoolId, branchId, classId, "school_track.view"),
+    permission(client, schoolId, branchId, classId, "school_track.manage"),
+  ]);
+  if (!canView && !canManage) return null;
+
+  const { data, error } = await client
+    .from("school_term_averages")
+    .select("id, school_id, branch_id, class_id, student_id, academic_year, term, average, updated_at")
+    .eq("school_id", schoolId)
+    .eq("branch_id", branchId)
+    .eq("student_id", studentId)
+    .order("academic_year", { ascending: false })
+    .limit(12);
+  if (error) throw error;
+
+  return ((data ?? []) as Array<Record<string, unknown>>)
+    .map(row => ({
+      id: String(row.id),
+      school_id: String(row.school_id),
+      branch_id: String(row.branch_id),
+      class_id: typeof row.class_id === "string" ? row.class_id : null,
+      student_id: String(row.student_id),
+      academic_year: String(row.academic_year),
+      term: String(row.term),
+      average: Number(row.average),
+      updated_at: String(row.updated_at),
+    }))
+    .sort((left, right) =>
+      right.academic_year.localeCompare(left.academic_year) ||
+      (TERM_ORDER.get(left.term) ?? 99) - (TERM_ORDER.get(right.term) ?? 99)
+    );
+}
+
 export async function createSchoolTrackResult(
   schoolId: string,
   input: SchoolTrackResultInput,
