@@ -76,7 +76,7 @@ const Student360 = lazy(() => import("./pages/Student360"));
 const StudentBulkImport = lazy(() => import("./pages/StudentBulkImport"));
 const PrintableStudentRegistrationForm = lazy(() => import("./pages/PrintableStudentRegistrationForm"));
 const AcademicReports = lazy(() => import("./pages/AcademicReports"));
-const SchoolTrack = lazy(() => import("./pages/SchoolTrack"));
+const SchoolTrack = lazy(() => import("./pages/SchoolTrackAverages"));
 const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 const AcceptGuardianInvite = lazy(
   () => import("./pages/AcceptGuardianInvite")
